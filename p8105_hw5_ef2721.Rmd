@@ -159,7 +159,7 @@ for (i in 1:5000) {
 sim_results = bind_rows(output)
 ```
 
-below we take a stab at the t-test for the 5000 smis, and showcase the mu_hat, sigma_hat, estimate, and p-value
+below we take a stab at the t-test for the 5000 sims, and showcase the mu_hat, sigma_hat, estimate, and p-value
 ```{r}
 t_tst = 
   sim_results %>%
@@ -170,4 +170,26 @@ t_tst =
   select(mu_hat, sigma_hat, estimate, "p_value" = p.value)
 ```
 
+We will now try to do the sim for ther mu numbers from 1 to 5:
+
+```{r}
+n_list = 
+  list(
+    "mu_1" = 1, 
+    "mu_2" = 2, 
+    "mu_3" = 3, 
+    "mu_4" = 4,
+    "mu_5" = 5
+    )
+
+output_t = vector("list", length = 5)
+
+for (i in 1:5) {
+  output_t[[i]] = rerun(5000, sim_mean_sd(mu = n_list[[i]])) 
+
+  sim_results = bind_rows(output_t)
+}
+
+sim_results_df = 
+  sim_results
 
