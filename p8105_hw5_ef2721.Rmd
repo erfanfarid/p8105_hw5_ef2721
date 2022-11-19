@@ -129,3 +129,45 @@ df = function(z) {
 In the code chunk above, I attempted to create a list to feed into a function as a loop to apply the same code I worked on earlier to all the 51 cities. 
 
 
+## Problem 3
+
+```{r}
+
+sim_mean_sd = function(n=30, mu, sigma = 5) {
+  
+  sim_data = tibble(
+    x = rnorm(n, mean = mu, sd = sigma)
+  )
+  
+  sim_data %>% 
+    summarize(
+      mu_hat = mean(x),
+      sigma_hat = sd(x)
+    )
+}
+```
+
+Above we have described a simulation setting the parameters of fixed n=30, mu=0, sigma=5. Below we will run a simulation to generate 5000 datasets after setting mu=0. 
+
+```{r}
+output = vector("list", 5000)
+
+for (i in 1:5000) {
+  output[[i]] = sim_mean_sd(mu = 0)
+}
+
+sim_results = bind_rows(output)
+```
+
+below we take a stab at the t-test for the 5000 smis, and showcase the mu_hat, sigma_hat, estimate, and p-value
+```{r}
+t_tst = 
+  sim_results %>%
+  mutate(
+    t_test_res = map(.x = output, ~t.test(.x) %>% broom::tidy())
+  ) %>% 
+  unnest() %>%
+  select(mu_hat, sigma_hat, estimate, "p_value" = p.value)
+```
+
+
