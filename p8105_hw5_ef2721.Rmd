@@ -78,18 +78,54 @@ This plot suggests high within-subject correlation -- subjects who start above a
 This includes data from various locations of crime, with names of victims, date of crime, victim demographics, and their final disposition. 
 
 ```{r}
-homi_df = read_csv("./data/homicide-data.csv")
+homi_df = read_csv("./data/homicide-data.csv") %>% 
+  janitor::clean_names()
 
 homi_tidy = homi_df %>% 
-  janitor::clean_names() %>% 
   mutate(city_state = str_c(city, ", ", state)) %>%
   group_by(city_state) %>% 
   summarize(
     disposition_n = n(),
     unsolved = sum(disposition %in% c("Closed without arrest", "Open/No arrest"))
-    )
+    ) %>% 
+  ungroup() %>% 
+  select(city_state, disposition_n, unsolved)
 ```
 
-The dataset is `r nrow(homi_df)` and `r ncol(homi_df)` in length. After tidying the dataset, I created a `city_state` vector using the `str_c` function to add the city and state columns. Fixed the issue of Tulsa being assigned to the wrong state. The `sum()` function was then used as a logical vector in `summarize()` to showcase the total number of homicides and the number of unsolved ones.
+The dataset `hamid_df` is `r nrow(homi_df)` and `r ncol(homi_df)` in length. After tidying the dataset, I created a `city_state` vector using the `str_c` function to add the city and state columns. Fixed the issue of Tulsa being assigned to the wrong state. The `sum()` function was then used as a logical vector in `summarize()` to showcase the total number of homicides and the number of unsolved ones.
+
+```{r}
+balt_df =
+  homi_tidy %>% 
+  filter(city_state == "Baltimore, MD") %>% 
+  mutate(p_obj = map2(unsolved, disposition_n, ~ prop.test(.x, .y) %>%
+    broom::tidy())
+    ) %>%
+    unnest() %>% 
+  select(city_state, estimate, "ci_lower" = conf.low, "ci_upper" = conf.high)
+```
+
+In the above code, city of Baltimore, MD information was filtered and `prop.test` was used to estimate the proportion of homicides that are unsolved. `purrr::map2` was used to utilize unsolved and total crime cases. The result was saved in `p_obj` object. Lastly, the estimated portion and the confidence intervals were selected.
+
+```{r}
+city_list = list(homi_tidy$city_state)
+
+for (i in 1:51) {
+  
+df = function(z) {
+  
+  homi_tidy %>% 
+  filter(city_state == "city_list[[z]]") %>% 
+  mutate(p_obj = map2(unsolved, disposition_n, ~ prop.test(.x, .y) %>%
+    broom::tidy())
+    ) %>%
+    unnest() %>% 
+  select(city_state, estimate, "ci_lower" = conf.low, "ci_upper" = conf.high)
+    
+}
+}
+```
+
+In the code chunk above, I attempted to create a list to feed into a function as a loop to apply the same code I worked on earlier to all the 51 cities. 
 
 
