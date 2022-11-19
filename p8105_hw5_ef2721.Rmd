@@ -185,11 +185,9 @@ n_list =
 output_t = vector("list", length = 5)
 
 for (i in 1:5) {
-  output_t[[i]] = rerun(5000, sim_mean_sd(mu = n_list[[i]])) 
-
-  sim_results = bind_rows(output_t)
+  output_t[[i]] = rerun(5000, sim_mean_sd(mu = n_list[[i]])) %>% 
+    bind_rows %>% 
+    unnest
 }
-
-sim_results_df = 
-  sim_results
+```
 
